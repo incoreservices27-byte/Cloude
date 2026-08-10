@@ -1,0 +1,38 @@
+{
+  "name": "zoho-mail-connector",
+  "version": "0.1.0",
+  "description": "MCP connector for Zoho Mail — read, search, send and organize mail from Claude",
+  "license": "MIT",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "bin": {
+    "zoho-mail-connector": "dist/stdio.js"
+  },
+  "main": "dist/stdio.js",
+  "files": [
+    "dist",
+    "README.md",
+    "SETUP.md"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "start": "node dist/stdio.js",
+    "start:http": "node dist/http.js",
+    "auth": "node dist/auth-cli.js",
+    "dev": "tsc --watch",
+    "test": "npm run build && node --test \"test/*.test.js\""
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.12.0",
+    "express": "^5.1.0",
+    "zod": "^3.25.0"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.0",
+    "@types/node": "^22.15.0",
+    "typescript": "^5.8.0"
+  }
+}
