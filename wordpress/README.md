@@ -13,15 +13,34 @@ That means **nothing else has to change**: the meta box that renders the field, 
 saves it, and the theme template that reads it all keep working exactly as they do today.
 Deactivate the plugin and the plain text box comes back with its data intact.
 
-## Install
+## Install — pick one
+
+Both routes install the same code. Use one, not both (they guard against each other,
+but there is no reason to have two copies).
+
+### A. As a plugin (recommended)
 
 1. Download `immobilsesto-gallery-picker.zip`.
 2. In wp-admin: **Plugins → Add New → Upload Plugin**, choose the zip, **Install Now**,
    then **Activate**.
-3. Open any listing. The gallery field is now a thumbnail grid.
 
 To install by hand instead, copy the `immobilsesto-gallery-picker/` folder into
 `wp-content/plugins/` and activate it.
+
+### B. As a code snippet (no file upload)
+
+Use this if you cannot upload plugins, or you already use the **Code Snippets** plugin.
+
+1. Open `immobilsesto-gallery-picker.snippet.php` — it is the whole thing in one file.
+2. **Snippets → Add New**, give it a title, paste the file in.
+3. If the editor complains about the first line, delete the opening `<?php` line and
+   paste the rest. Code Snippets adds that line itself.
+4. Set it to **Run everywhere** (or admin only) and **Save and Activate**.
+
+The same file also works appended to a child theme's `functions.php`, though a snippet
+or plugin is safer — a syntax error in `functions.php` locks you out of the site.
+
+Then open any listing: the gallery field is now a thumbnail grid.
 
 ## What you get
 
@@ -78,9 +97,15 @@ add_filter( 'immobilsesto_gallery_picker_label_pattern', function () {
 ## Development
 
 ```bash
-npm test                 # includes test/wp-gallery-picker.test.js
-npm run build:wp-plugin  # produces dist-wp/immobilsesto-gallery-picker.zip
+npm test                  # builds both artifacts, then runs every suite
+npm run build:wp-plugin   # produces dist-wp/immobilsesto-gallery-picker.zip
+npm run build:wp-snippet  # produces dist-wp/immobilsesto-gallery-picker.snippet.php
 ```
+
+The snippet is generated from the plugin's own assets, so the two can never drift.
+`test/wp-gallery-picker-snippet.test.js` renders it through PHP and asserts the script
+it emits is byte-identical to the one the other suite tests, then mounts that emitted
+script to prove it still runs. Those tests skip if `php` is not installed.
 
 The test suite drives the picker in a JSDOM copy of the real listing form — field detection,
 rendering, reordering, removal, the media modal and the failure path are all exercised. Only

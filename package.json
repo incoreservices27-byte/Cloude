@@ -23,8 +23,9 @@
     "start:http": "node dist/http.js",
     "auth": "node dist/auth-cli.js",
     "dev": "tsc --watch",
-    "test": "npm run build && node --test \"test/*.test.js\"",
-    "build:wp-plugin": "mkdir -p dist-wp && rm -f dist-wp/immobilsesto-gallery-picker.zip && cd wordpress && zip -rq ../dist-wp/immobilsesto-gallery-picker.zip immobilsesto-gallery-picker -x \"*.DS_Store\""
+    "test": "npm run build && npm run build:wp-snippet && node --test \"test/*.test.js\"",
+    "build:wp-plugin": "mkdir -p dist-wp && rm -f dist-wp/immobilsesto-gallery-picker.zip && cd wordpress && zip -rq ../dist-wp/immobilsesto-gallery-picker.zip immobilsesto-gallery-picker -x \"*.DS_Store\"",
+    "build:wp-snippet": "node scripts/build-snippet.mjs"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.12.0",
