@@ -73,18 +73,23 @@
 			}
 		}
 
-		// The screenshot's layout: a label (or <strong>/<p>) immediately above
-		// the input, inside a shared wrapper.
+		// The common layout: a label (or <strong>/<p>) immediately above the
+		// input. Walking backwards has to stop at the previous control, because
+		// the listing form is a flat run of label/field pairs in one container —
+		// without the guard, each field would inherit the label of the one before
+		// it, and the field after the gallery would look like the gallery.
 		var previous = input.previousElementSibling;
 		var hops = 0;
-		while (previous && hops < 3) {
+		while (previous && hops < 3 && !containsControl(previous)) {
 			parts.push(previous.textContent);
 			previous = previous.previousElementSibling;
 			hops++;
 		}
 
+		// A wrapper's label only belongs to this field if it is the only field in
+		// there; in a shared container the first label belongs to someone else.
 		var parent = input.parentElement;
-		if (parent) {
+		if (parent && parent.querySelectorAll('input, textarea, select').length === 1) {
 			var nested = parent.querySelector('label, strong, b');
 			if (nested && !nested.contains(input)) {
 				parts.push(nested.textContent);
@@ -92,6 +97,14 @@
 		}
 
 		return parts.join(' ').replace(/\s+/g, ' ').trim();
+	}
+
+	/** True when the element is a form control or wraps one. */
+	function containsControl(element) {
+		if (typeof element.matches === 'function' && element.matches('input, textarea, select')) {
+			return true;
+		}
+		return !!element.querySelector('input, textarea, select');
 	}
 
 	function cssEscape(value) {

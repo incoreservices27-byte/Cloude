@@ -422,3 +422,57 @@ test('an explicit selector overrides the looks-like-IDs guard', async () => {
 
   ctx.close();
 });
+
+/**
+ * The real form is a flat run of label/control pairs inside one container, so a
+ * backwards label search must stop at the previous control — otherwise the
+ * field *after* the gallery input inherits the gallery's label.
+ */
+const FLAT_FORM = `<!doctype html><html><body>
+  <form id="post">
+    <div class="postbox">
+      <label for="year_built">Year built</label>
+      <input type="text" id="year_built" name="year_built" value="1998">
+      <label for="energy_class">Energy class</label>
+      <input type="text" id="energy_class" name="energy_class" value="C">
+      <label for="heating">Heating</label>
+      <input type="text" id="heating" name="heating" value="Autonomo a gas">
+      <label for="map_query">Map query (address for map)</label>
+      <input type="text" id="map_query" name="map_query" value="Sesto Fiorentino, Firenze">
+      <label for="features">Features (one per line)</label>
+      <textarea id="features" name="features">Giardino privato
+Box auto
+Camino</textarea>
+      <label for="long_desc">Long description (one paragraph per line)</label>
+      <textarea id="long_desc" name="long_desc">${LONG_DESCRIPTION}</textarea>
+      <label for="gallery_ids">Gallery image IDs (comma separated)</label>
+      <input type="text" id="gallery_ids" name="gallery_ids" value="18,19,20,21">
+      <label for="price">Price</label>
+      <input type="text" id="price" name="price" value="450000">
+    </div>
+  </form>
+</body></html>`;
+
+test('enhances only the gallery field in a flat form', async () => {
+  const ctx = await setup({ html: FLAT_FORM, inputId: 'gallery_ids' });
+
+  assert.equal(ctx.input.dataset.isgpBound, '1', 'the gallery field is taken over');
+  assert.equal(ctx.document.querySelectorAll('.isgp-wrap').length, 1, 'exactly one widget');
+
+  for (const id of ['year_built', 'energy_class', 'heating', 'map_query', 'features', 'long_desc', 'price']) {
+    const field = ctx.document.getElementById(id);
+    assert.equal(field.dataset.isgpBound, undefined, `${id} must be left alone`);
+  }
+
+  ctx.close();
+});
+
+test('a numeric field following the gallery does not inherit its label', async () => {
+  const ctx = await setup({ html: FLAT_FORM, inputId: 'gallery_ids' });
+  const price = ctx.document.getElementById('price');
+
+  assert.equal(price.dataset.isgpBound, undefined, 'the next field is not the gallery');
+  assert.equal(price.value, '450000', 'and its value is untouched');
+
+  ctx.close();
+});
