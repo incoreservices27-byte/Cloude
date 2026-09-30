@@ -31,14 +31,22 @@ To install by hand instead, copy the `immobilsesto-gallery-picker/` folder into
 
 Use this if you cannot upload plugins, or you already use the **Code Snippets** plugin.
 
-1. Open `immobilsesto-gallery-picker.snippet.php` — it is the whole thing in one file.
-2. **Snippets → Add New**, give it a title, paste the file in.
-3. If the editor complains about the first line, delete the opening `<?php` line and
-   paste the rest. Code Snippets adds that line itself.
-4. Set it to **Run everywhere** (or admin only) and **Save and Activate**.
+1. Open `immobilsesto-gallery-picker.code-snippets.txt` — the whole thing, already
+   without an opening PHP tag, which is the form Code Snippets wants.
+2. **Snippets → Add New**, give it a title, paste the file in. Nothing to edit.
+3. Set it to **Run everywhere** (or admin only) and **Save and Activate**.
 
-The same file also works appended to a child theme's `functions.php`, though a snippet
-or plugin is safer — a syntax error in `functions.php` locks you out of the site.
+For a child theme's `functions.php` or an mu-plugin, use
+`immobilsesto-gallery-picker.snippet.php` instead — same code, with the opening tag.
+Editing `functions.php` is the riskiest route though: a mistake there locks you out of
+the site, while a bad snippet or plugin can simply be deactivated.
+
+**Why the snippet never leaves PHP mode.** Code Snippets strips PHP tags from pasted
+code before running it through `eval()`. An earlier build emitted its `<style>` and
+`<script>` blocks by dropping out of PHP mode, which survives `php -l` as a file but,
+once the tags are stripped, leaves bare markup sitting inside a PHP block — reported as
+a baffling `Unmatched '}'`. The generator now refuses to emit a snippet containing more
+than the one opening tag, and the tests parse it under both strippings.
 
 Then open any listing: the gallery field is now a thumbnail grid.
 

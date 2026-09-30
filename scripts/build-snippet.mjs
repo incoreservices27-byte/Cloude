@@ -42,9 +42,36 @@ const output = template
   .replace('__GALLERY_PICKER_CSS__', () => css)
   .replace('__GALLERY_PICKER_JS__', () => js);
 
+/**
+ * Code Snippets strips PHP tags from pasted code, so anything after the opening
+ * tag that leaves PHP mode comes back as bare markup inside a PHP block — which
+ * surfaces as a misleading "Unmatched '}'". The snippet must therefore be one
+ * uninterrupted PHP block.
+ */
+const openTags = output.match(/<\?(?:php|=)?/g) || [];
+const closeTags = output.match(/\?>/g) || [];
+if (openTags.length !== 1 || !output.startsWith('<?php')) {
+  throw new Error(`snippet must contain exactly one opening PHP tag, at the very start (found ${openTags.length})`);
+}
+if (closeTags.length !== 0) {
+  throw new Error(`snippet must not close PHP mode (found ${closeTags.length} \`?>\`)`);
+}
+
 const outDir = join(root, 'dist-wp');
 mkdirSync(outDir, { recursive: true });
+
 const outFile = join(outDir, 'immobilsesto-gallery-picker.snippet.php');
 writeFileSync(outFile, output);
 
+// Code Snippets supplies its own opening tag and expects the body without one.
+// Shipping that variant removes a manual edit step, which is a step that can go
+// wrong.
+const pasteFile = join(outDir, 'immobilsesto-gallery-picker.code-snippets.txt');
+const paste = output.replace(/^<\?php\r?\n/, '');
+if (/<\?(?:php|=)?|\?>/.test(paste)) {
+  throw new Error('the paste variant still contains a PHP tag');
+}
+writeFileSync(pasteFile, paste);
+
 console.log(`wrote ${outFile} (${output.length} bytes)`);
+console.log(`wrote ${pasteFile} (${paste.length} bytes, no opening tag)`);

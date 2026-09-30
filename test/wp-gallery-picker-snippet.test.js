@@ -17,6 +17,8 @@ const SNIPPET = fileURLToPath(new URL('../dist-wp/immobilsesto-gallery-picker.sn
 const ASSET = fileURLToPath(new URL('../wordpress/immobilsesto-gallery-picker/assets/gallery-picker.js', import.meta.url));
 const CSS_ASSET = fileURLToPath(new URL('../wordpress/immobilsesto-gallery-picker/assets/gallery-picker.css', import.meta.url));
 const HARNESS = fileURLToPath(new URL('./fixtures/render-snippet.php', import.meta.url));
+const EVALER = fileURLToPath(new URL('./fixtures/eval-snippet.php', import.meta.url));
+const PASTE = fileURLToPath(new URL('../dist-wp/immobilsesto-gallery-picker.code-snippets.txt', import.meta.url));
 
 const hasPhp = spawnSync('php', ['-v']).status === 0;
 const built = existsSync(SNIPPET);
@@ -116,4 +118,42 @@ test('the rendered snippet mounts the picker on a real listing form', { skip }, 
   assert.equal(window.document.getElementById('gallery_ids').value, '18,19', 'IDs still stored');
 
   window.close();
+});
+
+/**
+ * Code Snippets pastes into eval() and strips PHP tags first. A snippet that
+ * leaves PHP mode to emit markup therefore comes back as bare HTML sitting in a
+ * PHP block, which PHP reports as an unrelated-looking "Unmatched '}'".
+ */
+test('the snippet is one uninterrupted PHP block', { skip }, () => {
+  const code = readFileSync(SNIPPET, 'utf8');
+
+  assert.ok(code.startsWith('<?php'), 'opens with a PHP tag');
+
+  const body = code.replace(/^<\?php/, '');
+  assert.equal(body.match(/<\?(?:php|=)?/g), null, 'no further opening tags, comments included');
+  assert.equal(body.match(/\?>/g), null, 'and it never closes PHP mode');
+});
+
+test('it parses after Code Snippets strips the opening tag', { skip }, () => {
+  const out = execFileSync('php', [EVALER, SNIPPET, 'strip-leading'], { encoding: 'utf8' });
+  assert.match(out, /^OK/, out);
+});
+
+test('it parses even when every PHP tag is stripped', { skip }, () => {
+  const out = execFileSync('php', [EVALER, SNIPPET, 'strip-all'], { encoding: 'utf8' });
+  assert.match(out, /^OK/, out);
+});
+
+test('the paste variant carries no PHP tag at all', { skip }, () => {
+  const paste = readFileSync(PASTE, 'utf8');
+
+  assert.equal(paste.match(/<\?(?:php|=)?/g), null, 'nothing to delete before pasting');
+  assert.equal(paste.match(/\?>/g), null);
+  assert.ok(paste.includes('class ImmobilSesto_Gallery_Picker'), 'and it is still the whole thing');
+});
+
+test('the paste variant parses exactly as pasted', { skip }, () => {
+  const out = execFileSync('php', [EVALER, PASTE, 'as-is'], { encoding: 'utf8' });
+  assert.match(out, /^OK/, out);
 });

@@ -7,8 +7,12 @@
  * plugin. Run `npm run build:wp-snippet` to regenerate.
  *
  * Paste this into the Code Snippets plugin (Snippets -> Add New), or append it
- * to your child theme's functions.php. If your snippet box rejects the first
- * line, delete the opening `<?php` line and paste the rest.
+ * to your child theme's functions.php. Code Snippets supplies its own opening
+ * PHP tag, so delete the first line of this file before pasting there.
+ *
+ * Deliberately contains no PHP-mode transitions after that first line: Code
+ * Snippets strips PHP tags from pasted code, so emitting HTML by dropping out
+ * of PHP mode would leave bare markup sitting in a PHP block.
  *
  * It replaces the "Gallery image IDs (comma separated)" text box on listings
  * with a media picker: upload or choose images, thumbnails instead of numbers,
@@ -116,17 +120,17 @@ if ( ! class_exists( 'ImmobilSesto_Gallery_Picker' ) ) {
 					'dragHint'    => 'Drag to reorder — the first image is the main one.',
 				),
 			);
-			?>
-<style id="isgp-inline-style">
-<?php echo self::css(); // phpcs:ignore WordPress.Security.EscapeOutput ?>
-</style>
-<script id="isgp-inline-config">
-window.ImmobilSestoGalleryPicker = <?php echo wp_json_encode( $config ); ?>;
-</script>
-<script id="isgp-inline-script">
-<?php echo self::js(); // phpcs:ignore WordPress.Security.EscapeOutput ?>
-</script>
-			<?php
+			$out  = '<style id="isgp-inline-style">' . "\n";
+			$out .= self::css() . "\n";
+			$out .= '</style>' . "\n";
+			$out .= '<script id="isgp-inline-config">' . "\n";
+			$out .= 'window.ImmobilSestoGalleryPicker = ' . wp_json_encode( $config ) . ';' . "\n";
+			$out .= '</script>' . "\n";
+			$out .= '<script id="isgp-inline-script">' . "\n";
+			$out .= self::js() . "\n";
+			$out .= '</script>' . "\n";
+
+			echo $out; // phpcs:ignore WordPress.Security.EscapeOutput
 		}
 
 		public function ajax_thumbnails() {
