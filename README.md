@@ -104,6 +104,13 @@ but the code has not yet been run against a live Zoho mailbox. Expect first-run
 adjustments, most likely in `search_emails` operator syntax and `list_attachments`,
 whose response shape is passed through as-is.
 
+## Also in this repo
+
+`wordpress/immobilsesto-gallery-picker/` — a WordPress plugin that turns a listing's
+"Gallery image IDs (comma separated)" text box into a media picker with upload, thumbnails
+and drag-to-reorder, without changing how the field is stored. See
+[wordpress/README.md](wordpress/README.md).
+
 ## License
 
 MIT

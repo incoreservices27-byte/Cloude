@@ -1,5 +1,6 @@
 node_modules/
 dist/
+dist-wp/
 
 # Secrets — never commit these
 .env
