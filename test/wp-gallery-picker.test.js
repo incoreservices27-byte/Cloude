@@ -476,3 +476,32 @@ test('a numeric field following the gallery does not inherit its label', async (
 
   ctx.close();
 });
+
+test('a field named only "gallery" is still recognised', async () => {
+  const html = FORM
+    .replace(
+      '<label for="listing_gallery_ids">Gallery image IDs (comma separated)</label>',
+      '<label for="listing_gallery_ids">Immagini</label>',
+    )
+    .replace('name="listing_gallery_ids"', 'name="gallery"');
+  const ctx = await setup({ html });
+
+  assert.equal(ctx.input.dataset.isgpBound, '1', 'no "id" part needed in the name');
+  assert.equal(ctx.tiles().length, 4);
+
+  ctx.close();
+});
+
+test('isgpReport lists every field and which one was taken over', async () => {
+  const ctx = await setup();
+
+  const rows = ctx.window.isgpReport();
+  const byName = Object.fromEntries(rows.map((row) => [row.name, row]));
+
+  assert.ok(rows.length >= 2, 'reports the fields on the page');
+  assert.equal(byName.listing_gallery_ids.enhanced, true, 'says which field it took');
+  assert.equal(byName.listing_long_desc.enhanced, false, 'and which it did not');
+  assert.match(byName.listing_gallery_ids.label, /Gallery image IDs/, 'shows the label it judged');
+
+  ctx.close();
+});

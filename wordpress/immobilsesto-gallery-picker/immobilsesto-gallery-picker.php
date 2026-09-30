@@ -2,7 +2,7 @@
 /**
  * Plugin Name:       ImmobilSesto Gallery Picker
  * Description:       Replaces the "Gallery image IDs (comma separated)" text box on listings with a real media picker — upload or choose images, see thumbnails, drag to reorder, remove. The field still stores the same comma-separated IDs, so saving and front-end output are unchanged.
- * Version:           1.0.0
+ * Version:           1.1.0
  * Requires at least: 5.8
  * Requires PHP:      7.4
  * License:           GPL-2.0-or-later
@@ -22,7 +22,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 final class ImmobilSesto_Gallery_Picker {
 
-	const VERSION     = '1.0.0';
+	const VERSION     = '1.1.0';
 	const HANDLE      = 'immobilsesto-gallery-picker';
 	const AJAX_ACTION = 'immobilsesto_gallery_thumbs';
 	const NONCE       = 'immobilsesto_gallery_picker';
@@ -51,7 +51,13 @@ final class ImmobilSesto_Gallery_Picker {
 	 * @param string $hook Current admin page.
 	 */
 	public function enqueue( $hook ) {
-		if ( 'post.php' !== $hook && 'post-new.php' !== $hook ) {
+		// Deliberately not limited to post.php/post-new.php. A listing form is as
+		// likely to live on a custom admin page as in the post editor, and there
+		// the picker would simply never load. The script is inert on a page with
+		// no gallery field, so loading it widely costs a request, while guessing
+		// the screen wrong costs the whole feature.
+		$pages = $this->admin_pages();
+		if ( ! empty( $pages ) && ! in_array( $hook, $pages, true ) ) {
 			return;
 		}
 
@@ -61,10 +67,12 @@ final class ImmobilSesto_Gallery_Picker {
 			return;
 		}
 
+		// A post-type restriction can only apply where there is a post type to
+		// check; on a custom admin page there is none, and the picker still runs.
 		$post_types = $this->post_types();
 		if ( ! empty( $post_types ) ) {
 			$screen = function_exists( 'get_current_screen' ) ? get_current_screen() : null;
-			if ( ! $screen || ! in_array( $screen->post_type, $post_types, true ) ) {
+			if ( $screen && ! empty( $screen->post_type ) && ! in_array( $screen->post_type, $post_types, true ) ) {
 				return;
 			}
 		}
@@ -187,6 +195,18 @@ final class ImmobilSesto_Gallery_Picker {
 		}
 
 		return $ids;
+	}
+
+	/**
+	 * Admin page hooks to load on. Empty means every admin page, which is the
+	 * safe default when we do not know where the listing form lives.
+	 *
+	 * @return string[]
+	 */
+	private function admin_pages() {
+		$pages = apply_filters( 'immobilsesto_gallery_picker_admin_pages', array() );
+
+		return is_array( $pages ) ? array_values( array_filter( array_map( 'strval', $pages ) ) ) : array();
 	}
 
 	/**

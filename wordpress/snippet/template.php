@@ -30,7 +30,7 @@ if ( ! class_exists( 'ImmobilSesto_Gallery_Picker' ) ) {
 
 	final class ImmobilSesto_Gallery_Picker {
 
-		const VERSION     = '1.0.0';
+		const VERSION     = '1.1.0';
 		const AJAX_ACTION = 'immobilsesto_gallery_thumbs';
 		const NONCE       = 'immobilsesto_gallery_picker';
 
@@ -51,22 +51,21 @@ if ( ! class_exists( 'ImmobilSesto_Gallery_Picker' ) ) {
 			add_action( 'wp_ajax_' . self::AJAX_ACTION, array( $this, 'ajax_thumbnails' ) );
 		}
 
-		/** True only on a post edit screen where the picker makes sense. */
+		/**
+		 * Deliberately not limited to the post editor: a listing form is as likely
+		 * to live on a custom admin page, and there the picker would never load.
+		 * The script is inert where there is no gallery field.
+		 */
 		private function is_edit_screen() {
-			global $pagenow;
-
-			if ( 'post.php' !== $pagenow && 'post-new.php' !== $pagenow ) {
-				return false;
-			}
-
 			if ( ! current_user_can( 'upload_files' ) ) {
 				return false;
 			}
 
+			// A post-type restriction only applies where there is a post type.
 			$post_types = $this->post_types();
 			if ( ! empty( $post_types ) ) {
 				$screen = function_exists( 'get_current_screen' ) ? get_current_screen() : null;
-				if ( ! $screen || ! in_array( $screen->post_type, $post_types, true ) ) {
+				if ( $screen && ! empty( $screen->post_type ) && ! in_array( $screen->post_type, $post_types, true ) ) {
 					return false;
 				}
 			}
@@ -75,9 +74,6 @@ if ( ! class_exists( 'ImmobilSesto_Gallery_Picker' ) ) {
 		}
 
 		public function enqueue( $hook ) {
-			if ( 'post.php' !== $hook && 'post-new.php' !== $hook ) {
-				return;
-			}
 			if ( ! $this->is_edit_screen() ) {
 				return;
 			}

@@ -123,10 +123,15 @@
 		}
 	}
 
-	/** Name/id heuristic: something gallery-ish that stores ids or images. */
+	/**
+	 * Name/id heuristic. "gallery" in a field name is specific enough on its own —
+	 * requiring an "id"/"image" part as well only rules out real spellings like
+	 * `gallery` or `_property_gallery`. The looks-like-IDs check on the value is
+	 * what keeps this from matching something unrelated.
+	 */
 	function attributesLookRight(input) {
 		var haystack = ((input.name || '') + ' ' + (input.id || '')).toLowerCase();
-		return /galler|gallerie/.test(haystack) && /id|image|img|immagin/.test(haystack);
+		return /galler/.test(haystack);
 	}
 
 	function candidateFields() {
@@ -586,6 +591,32 @@
 	function scan() {
 		candidateFields().forEach(enhance);
 	}
+
+	/**
+	 * Diagnostic for when the picker does not appear: lists every field on the
+	 * page with the label text and value shape it was judged on. Run
+	 * `isgpReport()` in the browser console.
+	 */
+	window.isgpReport = function () {
+		var rows = [];
+		document.querySelectorAll('input, textarea').forEach(function (node) {
+			rows.push({
+				tag: node.tagName.toLowerCase(),
+				type: node.getAttribute('type') || '',
+				name: node.name || '',
+				id: node.id || '',
+				label: labelTextFor(node).slice(0, 70),
+				value: String(node.value || '').slice(0, 30),
+				enhanced: !!(node.dataset && node.dataset[BOUND])
+			});
+		});
+		if (typeof console.table === 'function') {
+			console.table(rows);
+		} else {
+			console.log(rows);
+		}
+		return rows;
+	};
 
 	$(function () {
 		scan();
